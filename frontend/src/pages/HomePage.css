@@ -1,0 +1,116 @@
+/* Home page styles */
+.home-page {
+  min-height: 100vh;
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  padding: var(--spacing-2xl) 0;
+  text-align: center;
+}
+
+.hero-content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: var(--spacing-md);
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-xl);
+  opacity: 0.9;
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.hero .btn-outline {
+  color: white;
+  border-color: white;
+}
+
+.hero .btn-outline:hover {
+  background: white;
+  color: var(--color-primary);
+}
+
+/* Features */
+.features-section {
+  background-color: var(--color-gray-50);
+}
+
+.feature-card {
+  background: white;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  color: var(--color-gray-800);
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-gray-800);
+}
+
+.feature-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--spacing-md);
+  font-size: 1.5rem;
+}
+
+.feature-green .feature-icon {
+  background-color: #DCFCE7;
+  color: var(--color-primary);
+}
+
+.feature-orange .feature-icon {
+  background-color: #FFEDD5;
+  color: var(--color-accent);
+}
+
+.feature-blue .feature-icon {
+  background-color: #DBEAFE;
+  color: var(--color-info);
+}
+
+.feature-purple .feature-icon {
+  background-color: #EDE9FE;
+  color: #7C3AED;
+}
+
+.feature-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+
+.feature-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+}

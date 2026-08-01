@@ -1,0 +1,12 @@
+/* Auth form styles */
+.auth-form-container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.auth-form-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-xl);
+}

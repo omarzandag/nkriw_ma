@@ -1,0 +1,1 @@
+"""NKRIW.MA Backend Application Package."""
