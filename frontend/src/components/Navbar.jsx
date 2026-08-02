@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
@@ -22,6 +22,7 @@ export default function Navbar() {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0)
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0)
   const [notifications, setNotifications] = useState([])
+  const navbarRef = useRef(null)
 
   const { i18n } = useTranslation()
 
@@ -43,6 +44,21 @@ export default function Navbar() {
       return () => clearInterval(interval)
     }
   }, [isAuthenticated])
+
+  // Close all dropdowns when clicking outside the navbar
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navbarRef.current && !navbarRef.current.contains(event.target)) {
+        setNotificationsOpen(false)
+        setUserMenuOpen(false)
+        setLangMenuOpen(false)
+        setMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const fetchUnreadNotificationsCount = async () => {
     try {
@@ -95,7 +111,7 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path
 
   return (
-    <nav className="navbar">
+    <nav className="navbar" ref={navbarRef}>
       <div className="navbar-inner">
         <div className="navbar-container">
         <Link to="/" className="navbar-brand">

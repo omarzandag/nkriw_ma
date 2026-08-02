@@ -1,4 +1,4 @@
-"""Forum router: threads, replies, and likes."""
+"""Forum router: threads, replies, likes, and follows."""
 
 from datetime import datetime, timezone
 from uuid import UUID
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.deps import get_current_user, get_optional_user
 from app.models.user import User
-from app.models.forum import ForumThread, ForumReply, ReplyLike
+from app.models.forum import ForumThread, ForumReply, ReplyLike, ForumFollow
 from app.schemas.forum import (
     ForumThreadResponse,
     ForumThreadCreate,
@@ -26,6 +26,29 @@ VALID_CATEGORIES = {
     "housing", "colocation", "transportation", "universities",
     "student_life", "general", "help",
 }
+
+
+def notify_thread_followers(
+    db: Session,
+    thread: ForumThread,
+    type: str,
+    title: str,
+    body: str | None = None,
+    exclude_user_id: UUID | None = None,
+):
+    """Send a notification to all users following a thread."""
+    follows = db.query(ForumFollow).filter(ForumFollow.thread_id == thread.id).all()
+    for follow in follows:
+        if exclude_user_id and follow.user_id == exclude_user_id:
+            continue
+        create_notification(
+            db,
+            user_id=follow.user_id,
+            type=type,
+            title=title,
+            body=body,
+            link=f"/forum/{thread.id}",
+        )
 
 
 @router.get("/threads", response_model=dict)
@@ -54,6 +77,7 @@ def list_threads(
     for item in items:
         thread_dict = ForumThreadResponse.model_validate(item).model_dump()
         thread_dict["replies_count"] = db.query(ForumReply).filter(ForumReply.thread_id == item.id).count()
+        thread_dict["followers_count"] = db.query(ForumFollow).filter(ForumFollow.thread_id == item.id).count()
         # Include author info
         author = db.query(User).filter(User.id == item.user_id).first()
         thread_dict["author_username"] = author.username if author else None
@@ -66,6 +90,7 @@ def list_threads(
 @router.get("/threads/{thread_id}", response_model=dict)
 def get_thread(
     thread_id: UUID,
+    current_user: User = Depends(get_optional_user),
     db: Session = Depends(get_db),
 ):
     """Get a single forum thread by ID."""
@@ -79,6 +104,13 @@ def get_thread(
 
     thread_dict = ForumThreadResponse.model_validate(thread).model_dump()
     thread_dict["replies_count"] = db.query(ForumReply).filter(ForumReply.thread_id == thread.id).count()
+    thread_dict["followers_count"] = db.query(ForumFollow).filter(ForumFollow.thread_id == thread.id).count()
+    thread_dict["is_following"] = False
+    if current_user:
+        thread_dict["is_following"] = db.query(ForumFollow).filter(
+            ForumFollow.thread_id == thread.id,
+            ForumFollow.user_id == current_user.id,
+        ).first() is not None
     # Include author info
     author = db.query(User).filter(User.id == thread.user_id).first()
     thread_dict["author_username"] = author.username if author else None
@@ -138,6 +170,17 @@ def update_thread(
 
     db.commit()
     db.refresh(thread)
+
+    # Notify followers about the modification
+    notify_thread_followers(
+        db,
+        thread=thread,
+        type="forum_update",
+        title=f"Thread updated: {thread.title}",
+        body="This thread has been modified.",
+        exclude_user_id=current_user.id,
+    )
+
     return ForumThreadResponse.model_validate(thread)
 
 
@@ -235,6 +278,16 @@ def create_reply(
             link=f"/forum/{thread_id}",
         )
 
+    # Notify all followers about the new reply
+    notify_thread_followers(
+        db,
+        thread=thread,
+        type="forum_reply",
+        title=f"New reply in: {thread.title}",
+        body=f"{current_user.username}: {request.content[:100]}",
+        exclude_user_id=current_user.id,
+    )
+
     return ForumReplyResponse.model_validate(reply)
 
 
@@ -256,6 +309,19 @@ def update_reply(
     reply.content = request.content
     db.commit()
     db.refresh(reply)
+
+    # Notify followers about the reply modification
+    thread = db.query(ForumThread).filter(ForumThread.id == reply.thread_id).first()
+    if thread:
+        notify_thread_followers(
+            db,
+            thread=thread,
+            type="forum_update",
+            title=f"Reply updated in: {thread.title}",
+            body=f"{current_user.username} modified a reply.",
+            exclude_user_id=current_user.id,
+        )
+
     return ForumReplyResponse.model_validate(reply)
 
 
@@ -302,6 +368,52 @@ def toggle_reply_like(
         db.add(like)
         db.commit()
         return {"liked": True, "likes_count": db.query(ReplyLike).filter(ReplyLike.reply_id == reply_id).count()}
+
+
+@router.post("/threads/{thread_id}/follow", response_model=dict)
+def follow_thread(
+    thread_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Follow a forum thread to receive notifications about its activity."""
+    thread = db.query(ForumThread).filter(ForumThread.id == thread_id).first()
+    if not thread:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found")
+
+    existing = db.query(ForumFollow).filter(
+        ForumFollow.thread_id == thread_id,
+        ForumFollow.user_id == current_user.id,
+    ).first()
+    if existing:
+        return {"following": True, "followers_count": db.query(ForumFollow).filter(ForumFollow.thread_id == thread_id).count()}
+
+    follow = ForumFollow(thread_id=thread_id, user_id=current_user.id)
+    db.add(follow)
+    db.commit()
+    return {"following": True, "followers_count": db.query(ForumFollow).filter(ForumFollow.thread_id == thread_id).count()}
+
+
+@router.post("/threads/{thread_id}/unfollow", response_model=dict)
+def unfollow_thread(
+    thread_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Unfollow a forum thread."""
+    thread = db.query(ForumThread).filter(ForumThread.id == thread_id).first()
+    if not thread:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found")
+
+    existing = db.query(ForumFollow).filter(
+        ForumFollow.thread_id == thread_id,
+        ForumFollow.user_id == current_user.id,
+    ).first()
+    if existing:
+        db.delete(existing)
+        db.commit()
+
+    return {"following": False, "followers_count": db.query(ForumFollow).filter(ForumFollow.thread_id == thread_id).count()}
 
 
 @router.post("/threads/{thread_id}/pin", response_model=ForumThreadResponse)

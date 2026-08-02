@@ -8,6 +8,7 @@
 }
 
 .footer-inner {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--spacing-lg);
@@ -21,14 +22,20 @@
 }
 
 @media (max-width: 768px) {
+  .footer-inner {
+    padding: 0 var(--spacing-md);
+  }
+
   .footer-grid {
     grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
   }
 }
 
 @media (max-width: 480px) {
   .footer-grid {
     grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
   }
 }
 

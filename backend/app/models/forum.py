@@ -1,4 +1,4 @@
-"""Forum models: threads, replies, and reply likes."""
+"""Forum models: threads, replies, reply likes, and thread follows."""
 
 import uuid
 from datetime import datetime, timezone
@@ -32,6 +32,7 @@ class ForumThread(Base):
 
     # Relationships
     replies = relationship("ForumReply", backref="thread", cascade="all, delete-orphan")
+    follows = relationship("ForumFollow", backref="thread", cascade="all, delete-orphan")
 
 
 class ForumReply(Base):
@@ -59,4 +60,16 @@ class ReplyLike(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     reply_id = Column(UUID(as_uuid=True), ForeignKey("forum_replies.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class ForumFollow(Base):
+    """Follow relationship between a user and a forum thread."""
+
+    __tablename__ = "forum_follows"
+    __table_args__ = (UniqueConstraint("thread_id", "user_id", name="uq_forum_follow"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    thread_id = Column(UUID(as_uuid=True), ForeignKey("forum_threads.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

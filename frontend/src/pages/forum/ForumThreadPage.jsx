@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { forumAPI } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
-import { FaHeart, FaEdit, FaTrash, FaPaperPlane, FaThumbtack, FaLock } from 'react-icons/fa'
+import { FaHeart, FaEdit, FaTrash, FaPaperPlane, FaThumbtack, FaLock, FaBell, FaBellSlash } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 
 export default function ForumThreadPage() {
@@ -17,6 +17,9 @@ export default function ForumThreadPage() {
   const [newReply, setNewReply] = useState('')
   const [editingReply, setEditingReply] = useState(null)
   const [editText, setEditText] = useState('')
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [followersCount, setFollowersCount] = useState(0)
+  const [followLoading, setFollowLoading] = useState(false)
 
   const fetchData = async () => {
     try {
@@ -25,6 +28,8 @@ export default function ForumThreadPage() {
         forumAPI.listReplies(id, { per_page: 100 }),
       ])
       setThread(threadRes.data)
+      setIsFollowing(threadRes.data.is_following || false)
+      setFollowersCount(threadRes.data.followers_count || 0)
       setReplies(repliesRes.data.items)
     } catch (error) { toast.error('Failed to load') }
     setLoading(false)
@@ -65,6 +70,28 @@ export default function ForumThreadPage() {
     catch (error) { toast.error('Failed') }
   }
 
+  const handleToggleFollow = async () => {
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
+    setFollowLoading(true)
+    try {
+      if (isFollowing) {
+        const res = await forumAPI.unfollowThread(id)
+        setIsFollowing(false)
+        setFollowersCount(res.data.followers_count)
+        toast.success('Unfollowed')
+      } else {
+        const res = await forumAPI.followThread(id)
+        setIsFollowing(true)
+        setFollowersCount(res.data.followers_count)
+        toast.success('Following')
+      }
+    } catch (error) { toast.error('Failed') }
+    setFollowLoading(false)
+  }
+
   if (loading) return <div className="loading-container"><div className="spinner"></div></div>
   if (!thread) return <div className="empty-state"><h3>Not found</h3></div>
 
@@ -101,12 +128,24 @@ export default function ForumThreadPage() {
               <span>{thread.views} views</span>
             </div>
             <div className="thread-content">{thread.content}</div>
-            {isOwner && (
-              <div className="flex gap-sm mt-4">
-                <Link to={`/forum/${id}/edit`} className="btn btn-outline btn-sm"><FaEdit /> {t('common.edit')}</Link>
-                <button onClick={handleDeleteThread} className="btn btn-danger btn-sm"><FaTrash /> {t('common.delete')}</button>
-              </div>
-            )}
+            <div className="flex gap-sm mt-4 flex-wrap">
+              {isAuthenticated && (
+                <button
+                  onClick={handleToggleFollow}
+                  disabled={followLoading}
+                  className={`btn btn-sm ${isFollowing ? 'btn-outline' : 'btn-primary'}`}
+                >
+                  {isFollowing ? <><FaBellSlash /> {t('forum.unfollow')}</> : <><FaBell /> {t('forum.follow')}</>}
+                  <span className="ml-1">({followersCount})</span>
+                </button>
+              )}
+              {isOwner && (
+                <>
+                  <Link to={`/forum/${id}/edit`} className="btn btn-outline btn-sm"><FaEdit /> {t('common.edit')}</Link>
+                  <button onClick={handleDeleteThread} className="btn btn-danger btn-sm"><FaTrash /> {t('common.delete')}</button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

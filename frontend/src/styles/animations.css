@@ -1,0 +1,444 @@
+/* NKRIW.MA Animations */
+
+/* Keyframe animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes messagePopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(10px);
+  }
+  60% {
+    transform: scale(1.05) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.6;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes wave {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Animation utility classes */
+.anim-fade-in-up {
+  animation: fadeInUp 0.5s ease both;
+}
+
+.anim-fade-in-down {
+  animation: fadeInDown 0.5s ease both;
+}
+
+.anim-fade-in-left {
+  animation: fadeInLeft 0.5s ease both;
+}
+
+.anim-fade-in-right {
+  animation: fadeInRight 0.5s ease both;
+}
+
+.anim-scale-in {
+  animation: scaleIn 0.4s ease both;
+}
+
+.anim-slide-in-right {
+  animation: slideInRight 0.4s ease both;
+}
+
+.anim-slide-in-left {
+  animation: slideInLeft 0.4s ease both;
+}
+
+.anim-bounce-in {
+  animation: bounceIn 0.5s ease both;
+}
+
+/* Staggered delays for list items */
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+.delay-3 { animation-delay: 0.15s; }
+.delay-4 { animation-delay: 0.2s; }
+.delay-5 { animation-delay: 0.25s; }
+.delay-6 { animation-delay: 0.3s; }
+.delay-7 { animation-delay: 0.35s; }
+.delay-8 { animation-delay: 0.4s; }
+.delay-9 { animation-delay: 0.45s; }
+.delay-10 { animation-delay: 0.5s; }
+.delay-11 { animation-delay: 0.55s; }
+.delay-12 { animation-delay: 0.6s; }
+.delay-13 { animation-delay: 0.65s; }
+.delay-14 { animation-delay: 0.7s; }
+.delay-15 { animation-delay: 0.75s; }
+.delay-16 { animation-delay: 0.8s; }
+.delay-17 { animation-delay: 0.85s; }
+.delay-18 { animation-delay: 0.9s; }
+.delay-19 { animation-delay: 0.95s; }
+.delay-20 { animation-delay: 1s; }
+
+/* Message bubble animations - sent (outgoing) */
+.message-bubble.sent.anim-msg-in {
+  animation: slideInRight 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Message bubble animations - received (incoming) */
+.message-bubble.received.anim-msg-in {
+  animation: slideInLeft 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* New message pop animation */
+.message-bubble.anim-msg-pop {
+  animation: messagePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Pulsing notification dot */
+.pulse-dot {
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+
+/* Conversation item hover lift */
+.conversation-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.conversation-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Notification item hover lift */
+.notification-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.notification-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Profile stat cards hover */
+.profile-stats .card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.profile-stats .card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Profile header animation */
+.profile-header {
+  animation: fadeInDown 0.6s ease both;
+}
+
+.profile-info {
+  animation: fadeInUp 0.6s ease 0.2s both;
+}
+
+.profile-stats .card {
+  animation: fadeInUp 0.5s ease both;
+}
+
+.profile-stats .card:nth-child(1) { animation-delay: 0.3s; }
+.profile-stats .card:nth-child(2) { animation-delay: 0.4s; }
+.profile-stats .card:nth-child(3) { animation-delay: 0.5s; }
+.profile-stats .card:nth-child(4) { animation-delay: 0.6s; }
+
+/* Information card animation */
+.info-card-anim {
+  animation: fadeInUp 0.5s ease 0.6s both;
+}
+
+/* Notifications list entrance */
+.notifications-list .notification-item {
+  animation: fadeInLeft 0.4s ease both;
+}
+
+.notifications-list .notification-item:nth-child(1) { animation-delay: 0.05s; }
+.notifications-list .notification-item:nth-child(2) { animation-delay: 0.1s; }
+.notifications-list .notification-item:nth-child(3) { animation-delay: 0.15s; }
+.notifications-list .notification-item:nth-child(4) { animation-delay: 0.2s; }
+.notifications-list .notification-item:nth-child(5) { animation-delay: 0.25s; }
+.notifications-list .notification-item:nth-child(6) { animation-delay: 0.3s; }
+.notifications-list .notification-item:nth-child(7) { animation-delay: 0.35s; }
+.notifications-list .notification-item:nth-child(8) { animation-delay: 0.4s; }
+.notifications-list .notification-item:nth-child(9) { animation-delay: 0.45s; }
+.notifications-list .notification-item:nth-child(10) { animation-delay: 0.5s; }
+.notifications-list .notification-item:nth-child(11) { animation-delay: 0.55s; }
+.notifications-list .notification-item:nth-child(12) { animation-delay: 0.6s; }
+.notifications-list .notification-item:nth-child(13) { animation-delay: 0.65s; }
+.notifications-list .notification-item:nth-child(14) { animation-delay: 0.7s; }
+.notifications-list .notification-item:nth-child(15) { animation-delay: 0.75s; }
+.notifications-list .notification-item:nth-child(16) { animation-delay: 0.8s; }
+.notifications-list .notification-item:nth-child(17) { animation-delay: 0.85s; }
+.notifications-list .notification-item:nth-child(18) { animation-delay: 0.9s; }
+.notifications-list .notification-item:nth-child(19) { animation-delay: 0.95s; }
+.notifications-list .notification-item:nth-child(20) { animation-delay: 1s; }
+
+/* Conversation list entrance */
+.conversations-list-content .conversation-item {
+  animation: fadeInLeft 0.35s ease both;
+}
+
+.conversations-list-content .conversation-item:nth-child(1) { animation-delay: 0.05s; }
+.conversations-list-content .conversation-item:nth-child(2) { animation-delay: 0.1s; }
+.conversations-list-content .conversation-item:nth-child(3) { animation-delay: 0.15s; }
+.conversations-list-content .conversation-item:nth-child(4) { animation-delay: 0.2s; }
+.conversations-list-content .conversation-item:nth-child(5) { animation-delay: 0.25s; }
+.conversations-list-content .conversation-item:nth-child(6) { animation-delay: 0.3s; }
+.conversations-list-content .conversation-item:nth-child(7) { animation-delay: 0.35s; }
+.conversations-list-content .conversation-item:nth-child(8) { animation-delay: 0.4s; }
+.conversations-list-content .conversation-item:nth-child(9) { animation-delay: 0.45s; }
+.conversations-list-content .conversation-item:nth-child(10) { animation-delay: 0.5s; }
+.conversations-list-content .conversation-item:nth-child(11) { animation-delay: 0.55s; }
+.conversations-list-content .conversation-item:nth-child(12) { animation-delay: 0.6s; }
+.conversations-list-content .conversation-item:nth-child(13) { animation-delay: 0.65s; }
+.conversations-list-content .conversation-item:nth-child(14) { animation-delay: 0.7s; }
+.conversations-list-content .conversation-item:nth-child(15) { animation-delay: 0.75s; }
+.conversations-list-content .conversation-item:nth-child(16) { animation-delay: 0.8s; }
+.conversations-list-content .conversation-item:nth-child(17) { animation-delay: 0.85s; }
+.conversations-list-content .conversation-item:nth-child(18) { animation-delay: 0.9s; }
+.conversations-list-content .conversation-item:nth-child(19) { animation-delay: 0.95s; }
+.conversations-list-content .conversation-item:nth-child(20) { animation-delay: 1s; }
+
+/* Messages header animation */
+.messages-header {
+  animation: fadeInDown 0.4s ease both;
+}
+
+/* Message bubbles stagger on initial load */
+.messages-list .message-bubble {
+  animation: messagePopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Typing indicator animation */
+.typing-indicator {
+  display: inline-flex;
+  gap: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-gray-100);
+  border-radius: var(--radius-lg);
+  align-self: flex-start;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-gray-400);
+  animation: wave 1.2s ease-in-out infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* New message bounce highlight */
+@keyframes highlightNewMessage {
+  0% {
+    background-color: rgba(22, 163, 74, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.message-highlight {
+  animation: highlightNewMessage 2s ease-out;
+}
+
+/* Header buttons hover scale */
+.btn {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Notification header animation */
+.notifications-header {
+  animation: fadeInDown 0.4s ease both;
+}
+
+/* Empty states */
+.empty-state {
+  animation: fadeInUp 0.5s ease both;
+}
+
+/* Loading shimmer */
+.shimmer-loading {
+  background: linear-gradient(90deg, var(--color-gray-100) 25%, var(--color-gray-200) 50%, var(--color-gray-100) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Message input form animation */
+.message-input-form {
+  animation: fadeInUp 0.4s ease both;
+}
+
+/* Messaging container entrance */
+.messaging-container {
+  animation: scaleIn 0.4s ease both;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-in-up,
+  .anim-fade-in-down,
+  .anim-fade-in-left,
+  .anim-fade-in-right,
+  .anim-scale-in,
+  .anim-slide-in-right,
+  .anim-slide-in-left,
+  .anim-bounce-in,
+  .message-bubble.sent.anim-msg-in,
+  .message-bubble.received.anim-msg-in,
+  .message-bubble.anim-msg-pop,
+  .pulse-dot,
+  .notifications-list .notification-item,
+  .conversations-list-content .conversation-item,
+  .messages-list .message-bubble,
+  .profile-stats .card,
+  .profile-header,
+  .profile-info,
+  .info-card-anim,
+  .messaging-container,
+  .messages-header,
+  .message-input-form {
+    animation: none !important;
+  }
+
+  .conversation-item:hover,
+  .notification-item:hover,
+  .profile-stats .card:hover {
+    transform: none !important;
+  }
+}

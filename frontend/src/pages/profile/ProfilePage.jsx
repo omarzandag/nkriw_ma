@@ -115,7 +115,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="card mt-4">
+        <div className="card mt-4 info-card-anim">
           <div className="card-body">
             <h3 className="font-semibold mb-3">Information</h3>
             <div className="grid grid-2">

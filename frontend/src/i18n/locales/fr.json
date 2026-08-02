@@ -195,6 +195,8 @@
     "unlike": "Je n'aime plus",
     "editReply": "Modifier la réponse",
     "deleteReply": "Supprimer la réponse",
+    "follow": "Suivre",
+    "unfollow": "Ne plus suivre",
     "categories": {
       "housing": "Logement",
       "colocation": "Colocation",

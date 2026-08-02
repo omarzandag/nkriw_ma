@@ -130,6 +130,8 @@ export const forumAPI = {
   toggleReplyLike: (replyId) => api.post(`/forum/replies/${replyId}/like`),
   togglePin: (threadId) => api.post(`/forum/threads/${threadId}/pin`),
   toggleClose: (threadId) => api.post(`/forum/threads/${threadId}/close`),
+  followThread: (threadId) => api.post(`/forum/threads/${threadId}/follow`),
+  unfollowThread: (threadId) => api.post(`/forum/threads/${threadId}/unfollow`),
 }
 
 // Messaging API

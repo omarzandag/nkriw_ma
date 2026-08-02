@@ -195,6 +195,8 @@
     "unlike": "إلغاء الإعجاب",
     "editReply": "تعديل الرد",
     "deleteReply": "حذف الرد",
+    "follow": "متابعة",
+    "unfollow": "إلغاء المتابعة",
     "categories": {
       "housing": "السكن",
       "colocation": "السكن المشترك",

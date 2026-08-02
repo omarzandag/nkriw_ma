@@ -16,8 +16,10 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
+  const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef(null)
   const [isMobileView, setIsMobileView] = useState(false)
+  const [highlightedMessageId, setHighlightedMessageId] = useState(null)
 
   const fetchConversations = async () => {
     try {
@@ -54,7 +56,7 @@ export default function MessagesPage() {
       console.log('WebSocket connected')
     }
 
-    ws.onmessage = (event) => {
+   ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
         if (data.type === 'new_message') {
@@ -67,6 +69,10 @@ export default function MessagesPage() {
               const filtered = prev.filter(msg => !msg.id.toString().includes('temp'))
               return [...filtered, newMsg]
             })
+            // Highlight the new message
+            setHighlightedMessageId(newMsg.id)
+            setTimeout(() => setHighlightedMessageId(null), 2000)
+            setIsSending(false)
             scrollToBottom()
           }
           
@@ -118,6 +124,7 @@ export default function MessagesPage() {
     // Add message immediately to UI
     setMessages(prev => [...prev, tempMessage])
     setNewMessage('')
+    setIsSending(true)
     scrollToBottom()
     
     try {
@@ -127,6 +134,7 @@ export default function MessagesPage() {
       toast.error('Failed to send')
       // Remove the temporary message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id))
+      setIsSending(false)
     }
   }
 
@@ -229,12 +237,19 @@ export default function MessagesPage() {
                   </div>
                 </div>
                 <div className="messages-list">
-                  {messages.map((msg) => (
-                    <div key={msg.id} className={`message-bubble ${msg.sender_id === user?.id ? 'sent' : 'received'}`}>
+                  {messages.map((msg, index) => (
+                    <div key={msg.id} className={`message-bubble ${msg.sender_id === user?.id ? 'sent' : 'received'} anim-msg-in ${highlightedMessageId === msg.id ? 'message-highlight' : ''}`} style={{ animationDelay: `${Math.min(index * 0.02, 0.3)}s` }}>
                       <p>{msg.content}</p>
                       <span className="message-time text-sm">{new Date(msg.created_at).toLocaleTimeString()}</span>
                     </div>
                   ))}
+                  {isSending && (
+                    <div className="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
                 <form onSubmit={handleSend} className="message-input-form">

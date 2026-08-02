@@ -106,7 +106,7 @@ export default function NotificationsPage() {
                   </p>
                 </div>
                 <div className="notification-actions">
-                  {!notif.is_read && <span className="unread-dot"></span>}
+                  {!notif.is_read && <span className="unread-dot pulse-dot"></span>}
                   <button
                     className="icon-btn-sm"
                     onClick={(e) => { e.stopPropagation(); handleMarkRead(notif.id) }}
