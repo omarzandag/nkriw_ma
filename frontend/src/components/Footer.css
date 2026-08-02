@@ -4,6 +4,13 @@
   color: var(--color-gray-300);
   padding: var(--spacing-2xl) 0 var(--spacing-lg);
   margin-top: auto;
+  width: 100%;
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
 }
 
 .footer-grid {

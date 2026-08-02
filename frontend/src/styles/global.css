@@ -291,6 +291,17 @@ a:hover {
   padding: var(--spacing-xl) 0;
 }
 
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+}
+
 /* Grid */
 .grid {
   display: grid;

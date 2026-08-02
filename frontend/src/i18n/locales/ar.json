@@ -41,7 +41,8 @@
     "notifications": "الإشعارات",
     "settings": "الإعدادات",
     "admin": "المدير",
-    "dashboard": "لوحة التحكم"
+    "dashboard": "لوحة التحكم",
+    "comments": "التعليقات"
   },
   "auth": {
     "loginTitle": "مرحبا بعودتك",
@@ -139,7 +140,10 @@
     "villa": "فيلا",
     "sharedRoom": "غرفة مشتركة",
     "privateRoom": "غرفة خاصة",
-    "studentResidence": "سكن طلابي"
+    "studentResidence": "سكن طلابي",
+    "shared_room": "غرفة مشتركة",
+    "private_room": "غرفة خاصة",
+    "student_residence": "سكن طلابي"
   },
   "colocation": {
     "title": "السكن المشترك",

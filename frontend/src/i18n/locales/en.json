@@ -41,7 +41,8 @@
     "notifications": "Notifications",
     "settings": "Settings",
     "admin": "Admin",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "comments": "Comments"
   },
   "auth": {
     "loginTitle": "Welcome Back",
@@ -139,7 +140,10 @@
     "villa": "Villa",
     "sharedRoom": "Shared Room",
     "privateRoom": "Private Room",
-    "studentResidence": "Student Residence"
+    "studentResidence": "Student Residence",
+    "shared_room": "Shared Room",
+    "private_room": "Private Room",
+    "student_residence": "Student Residence"
   },
   "colocation": {
     "title": "Co-location",

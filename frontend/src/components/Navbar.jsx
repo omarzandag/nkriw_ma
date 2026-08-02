@@ -96,7 +96,8 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="container navbar-container">
+      <div className="navbar-inner">
+        <div className="navbar-container">
         <Link to="/" className="navbar-brand">
           <span className="brand-text">NKRIW<span className="brand-accent">.MA</span></span>
         </Link>
@@ -215,41 +216,42 @@ export default function Navbar() {
             {mobileMenuOpen ? <FaTimes /> : <FaBars />}
           </button>
         </div>
-      </div>
 
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="mobile-menu">
-          <ul>
-            {navLinks.map((link) => (
-              <li key={link.to}>
-                <Link
-                  to={link.to}
-                  className={`nav-link ${isActive(link.to) ? 'active' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.icon}
-                  <span>{link.label}</span>
-                </Link>
-              </li>
-            ))}
-            {!isAuthenticated && (
-              <>
-                <li>
-                  <Link to="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                    <FaSignInAlt /> <span>{t('common.login')}</span>
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu">
+            <ul>
+              {navLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className={`nav-link ${isActive(link.to) ? 'active' : ''}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.icon}
+                    <span>{link.label}</span>
                   </Link>
                 </li>
-                <li>
-                  <Link to="/register" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
-                    <FaUserPlus /> <span>{t('common.register')}</span>
-                  </Link>
-                </li>
-              </>
-            )}
-          </ul>
-        </div>
-      )}
+              ))}
+              {!isAuthenticated && (
+                <>
+                  <li>
+                    <Link to="/login" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaSignInAlt /> <span>{t('common.login')}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/register" className="nav-link" onClick={() => setMobileMenuOpen(false)}>
+                      <FaUserPlus /> <span>{t('common.register')}</span>
+                    </Link>
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
+        )}
+      </div>
+      </div>
     </nav>
   )
 }

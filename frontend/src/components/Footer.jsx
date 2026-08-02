@@ -8,7 +8,8 @@ export default function Footer() {
 
   return (
     <footer className="footer">
-      <div className="container">
+      <div className="footer-inner">
+        <div className="container">
         <div className="footer-grid">
           <div className="footer-section">
             <h3 className="footer-brand">NKRIW<span className="brand-accent">.MA</span></h3>
@@ -54,6 +55,7 @@ export default function Footer() {
 
         <div className="footer-bottom">
           <p>&copy; {new Date().getFullYear()} NKRIW.MA. All rights reserved.</p>
+        </div>
         </div>
       </div>
     </footer>
