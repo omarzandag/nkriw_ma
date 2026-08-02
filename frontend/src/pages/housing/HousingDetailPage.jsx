@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { housingAPI } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
-import { FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaPhone, FaEdit, FaTrash, FaCheck } from 'react-icons/fa'
+import { FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaPhone, FaEdit, FaTrash, FaCheck, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 import Comments from '../../components/Comments'
 import './Housing.css'
@@ -15,6 +15,7 @@ export default function HousingDetailPage() {
   const navigate = useNavigate()
   const [ad, setAd] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   useEffect(() => {
     const fetchAd = async () => {
@@ -80,7 +81,45 @@ export default function HousingDetailPage() {
             {/* Images */}
             <div className="housing-detail-images">
               {ad.images && ad.images.length > 0 ? (
-                <img src={ad.images[0].image_url} alt={ad.title} className="main-image" />
+                <>
+                  <div className="image-gallery">
+                    <img src={ad.images[currentImageIndex].image_url} alt={`${ad.title} - ${currentImageIndex + 1}`} className="main-image" />
+                    {ad.images.length > 1 && (
+                      <>
+                        <button 
+                          className="gallery-nav gallery-prev" 
+                          onClick={() => setCurrentImageIndex(prev => prev === 0 ? ad.images.length - 1 : prev - 1)}
+                          aria-label="Previous image"
+                        >
+                          <FaChevronLeft />
+                        </button>
+                        <button 
+                          className="gallery-nav gallery-next" 
+                          onClick={() => setCurrentImageIndex(prev => prev === ad.images.length - 1 ? 0 : prev + 1)}
+                          aria-label="Next image"
+                        >
+                          <FaChevronRight />
+                        </button>
+                        <div className="gallery-counter">
+                          {currentImageIndex + 1} / {ad.images.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {ad.images.length > 1 && (
+                    <div className="image-thumbnails">
+                      {ad.images.map((img, index) => (
+                        <img 
+                          key={img.id} 
+                          src={img.image_url} 
+                          alt={`Thumbnail ${index + 1}`} 
+                          className={`thumbnail ${index === currentImageIndex ? 'active' : ''}`}
+                          onClick={() => setCurrentImageIndex(index)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="no-image large"><FaMapMarkerAlt /></div>
               )}
