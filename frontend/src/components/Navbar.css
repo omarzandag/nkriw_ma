@@ -248,6 +248,19 @@
   }
 }
 
+/* Large screens: wider navbar to match page content */
+@media (min-width: 1400px) {
+  .navbar-inner {
+    max-width: 1320px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .navbar-inner {
+    max-width: 1400px;
+  }
+}
+
 /* Main content */
 .main-content {
   min-height: calc(100vh - 64px - 200px);

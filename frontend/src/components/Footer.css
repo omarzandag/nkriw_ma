@@ -96,3 +96,16 @@
   font-size: var(--font-size-sm);
   color: var(--color-gray-500);
 }
+
+/* Large screens: wider footer to match page content */
+@media (min-width: 1400px) {
+  .footer-inner {
+    max-width: 1320px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .footer-inner {
+    max-width: 1400px;
+  }
+}
