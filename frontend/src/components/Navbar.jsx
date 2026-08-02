@@ -45,6 +45,59 @@ export default function Navbar() {
     }
   }, [isAuthenticated])
 
+  // Listen for messages-read events to update badge in real-time
+  useEffect(() => {
+    const handleMessagesRead = () => {
+      fetchUnreadMessagesCount()
+    }
+    window.addEventListener('messages-read', handleMessagesRead)
+    return () => window.removeEventListener('messages-read', handleMessagesRead)
+  }, [])
+
+  // Real-time WebSocket for messaging badge
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return
+
+    const token = localStorage.getItem('nkriwma_token')
+    if (!token) return
+
+    const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/messaging/ws/${user.id}`
+    const ws = new WebSocket(wsUrl)
+
+    ws.onopen = () => {
+      console.log('Navbar WebSocket connected')
+    }
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === 'new_message') {
+          // New message received - update unread count in real-time
+          fetchUnreadMessagesCount()
+        } else if (data.type === 'messages_read' || data.type === 'message_read') {
+          // Messages were read - update unread count
+          fetchUnreadMessagesCount()
+        }
+      } catch (error) {
+        console.error('Navbar WebSocket message error:', error)
+      }
+    }
+
+    ws.onerror = (error) => {
+      console.error('Navbar WebSocket error:', error)
+    }
+
+    ws.onclose = () => {
+      console.log('Navbar WebSocket disconnected')
+    }
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close()
+      }
+    }
+  }, [isAuthenticated, user?.id])
+
   // Close all dropdowns when clicking outside the navbar
   useEffect(() => {
     const handleClickOutside = (event) => {

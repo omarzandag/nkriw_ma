@@ -144,6 +144,7 @@ export const messagingAPI = {
   blockUser: (id) => api.post(`/messaging/conversations/${id}/block`),
   unblockUser: (id) => api.post(`/messaging/conversations/${id}/unblock`),
   getUnreadCount: () => api.get('/messaging/unread-count'),
+  markConversationRead: (conversationId) => api.post(`/messaging/conversations/${conversationId}/read`),
 }
 
 // Comments API

@@ -216,7 +216,10 @@
     "unblockUser": "إلغاء حظر المستخدم",
     "deleteConversation": "حذف المحادثة",
     "noConversations": "لا توجد محادثات",
-    "startConversation": "ابدأ محادثة"
+    "startConversation": "ابدأ محادثة",
+    "typing": "يكتب",
+    "read": "مقروء",
+    "delivered": "تم التسليم"
   },
   "profile": {
     "title": "الملف الشخصي",

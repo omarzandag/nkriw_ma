@@ -1,6 +1,5 @@
 """Main FastAPI application entry point."""
 
-import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -13,6 +12,27 @@ from app.core.config import settings
 from app.database import Base, engine, SessionLocal
 from app.core.security import get_password_hash
 from app.models.user import User
+
+
+def add_missing_columns():
+    """Add any missing columns to existing tables (for schema upgrades)."""
+    from sqlalchemy import inspect, text
+
+    db = SessionLocal()
+    try:
+        inspector = inspect(db.bind)
+        columns = [col["name"] for col in inspector.get_columns("messages")]
+
+        # Add read_at column to messages table if missing
+        if "read_at" not in columns:
+            db.execute(text("ALTER TABLE messages ADD COLUMN read_at TIMESTAMP WITHOUT TIME ZONE"))
+            db.commit()
+            print("Added 'read_at' column to messages table")
+    except Exception as e:
+        db.rollback()
+        print(f"Schema check completed (may already be up to date): {e}")
+    finally:
+        db.close()
 
 
 def create_admin_if_not_exists():
@@ -49,6 +69,9 @@ async def lifespan(app: FastAPI):
 
     # Create all tables
     Base.metadata.create_all(bind=engine)
+
+    # Add missing columns for schema upgrades
+    add_missing_columns()
 
     # Create default admin
     create_admin_if_not_exists()

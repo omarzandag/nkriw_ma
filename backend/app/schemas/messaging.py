@@ -20,6 +20,7 @@ class MessageResponse(BaseModel):
     image_url: str | None = None
     is_read: bool
     is_delivered: bool
+    read_at: datetime | None = None
     created_at: datetime
 
 

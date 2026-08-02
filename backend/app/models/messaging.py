@@ -46,5 +46,6 @@ class Message(Base):
 
     is_read = Column(Boolean, default=False)
     is_delivered = Column(Boolean, default=True)
+    read_at = Column(DateTime, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

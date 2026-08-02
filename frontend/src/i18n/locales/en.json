@@ -216,7 +216,10 @@
     "unblockUser": "Unblock User",
     "deleteConversation": "Delete Conversation",
     "noConversations": "No conversations yet",
-    "startConversation": "Start a conversation"
+    "startConversation": "Start a conversation",
+    "typing": "typing",
+    "read": "Read",
+    "delivered": "Delivered"
   },
   "profile": {
     "title": "Profile",

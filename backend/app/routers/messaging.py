@@ -18,19 +18,29 @@ router = APIRouter(prefix="/api/messaging", tags=["Messaging"])
 # WebSocket connection manager
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: dict[str, WebSocket] = {}
+        self.active_connections: dict[str, list[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket, user_id: str):
         await websocket.accept()
-        self.active_connections[user_id] = websocket
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = []
+        self.active_connections[user_id].append(websocket)
 
-    def disconnect(self, user_id: str):
+    def disconnect(self, websocket: WebSocket, user_id: str):
         if user_id in self.active_connections:
-            del self.active_connections[user_id]
+            if websocket in self.active_connections[user_id]:
+                self.active_connections[user_id].remove(websocket)
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
 
     async def send_personal_message(self, message: dict, user_id: str):
-        if user_id in self.active_connections:
-            await self.active_connections[user_id].send_json(message)
+        connections = self.active_connections.get(user_id, [])
+        for connection in connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                # Remove broken connections
+                self.disconnect(connection, user_id)
 
 manager = ConnectionManager()
 
@@ -80,7 +90,7 @@ def list_conversations(
 
 
 @router.get("/conversations/{conversation_id}/messages", response_model=dict)
-def get_messages(
+async def get_messages(
     conversation_id: UUID,
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
@@ -99,15 +109,29 @@ def get_messages(
     query = query.order_by(Message.created_at.desc())
     items, total, pages = paginate(query, page, per_page)
 
-    # Mark messages as read
+    # Mark messages as read and notify sender
     unread = db.query(Message).filter(
         Message.conversation_id == conversation_id,
         Message.receiver_id == current_user.id,
         Message.is_read == False,
     ).all()
+    
+    sender_ids = set()
+    now = datetime.now(timezone.utc)
     for msg in unread:
         msg.is_read = True
+        msg.read_at = now
+        sender_ids.add(str(msg.sender_id))
     db.commit()
+
+    # Notify senders that their messages were read
+    for sender_id in sender_ids:
+        await manager.send_personal_message({
+            "type": "messages_read",
+            "conversation_id": str(conversation_id),
+            "reader_id": str(current_user.id),
+            "read_at": now.isoformat(),
+        }, sender_id)
 
     return {
         "items": [MessageResponse.model_validate(item) for item in reversed(items)],
@@ -216,6 +240,47 @@ async def send_message(
     return MessageResponse.model_validate(msg)
 
 
+@router.post("/conversations/{conversation_id}/read", response_model=dict)
+async def mark_conversation_read(
+    conversation_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Mark all messages in a conversation as read and notify the sender."""
+    conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+    if conv.user1_id != current_user.id and conv.user2_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+
+    # Find unread messages sent to current user
+    unread = db.query(Message).filter(
+        Message.conversation_id == conversation_id,
+        Message.receiver_id == current_user.id,
+        Message.is_read == False,
+    ).all()
+
+    sender_ids = set()
+    now = datetime.now(timezone.utc)
+    for msg in unread:
+        msg.is_read = True
+        msg.read_at = now
+        sender_ids.add(str(msg.sender_id))
+    db.commit()
+
+    # Notify senders that their messages were read
+    for sender_id in sender_ids:
+        await manager.send_personal_message({
+            "type": "messages_read",
+            "conversation_id": str(conversation_id),
+            "reader_id": str(current_user.id),
+            "read_at": now.isoformat(),
+        }, sender_id)
+
+    return {"read_count": len(unread)}
+
+
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_conversation(
     conversation_id: UUID,
@@ -306,8 +371,61 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
     await manager.connect(websocket, user_id)
     try:
         while True:
-            # Keep connection alive and wait for any messages
+            # Receive messages from the client (typing indicators, read receipts, etc.)
             data = await websocket.receive_text()
-            # We don't expect clients to send data, but we need to listen to detect disconnection
+            try:
+                import json
+                payload = json.loads(data)
+                msg_type = payload.get("type")
+
+                if msg_type == "typing":
+                    # Forward typing indicator to the other user
+                    conversation_id = payload.get("conversation_id")
+                    is_typing = payload.get("is_typing", True)
+                    
+                    # Find the conversation to determine the other user
+                    from app.database import SessionLocal
+                    db = SessionLocal()
+                    try:
+                        conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+                        if conv:
+                            other_user_id = str(conv.user2_id) if str(conv.user1_id) == user_id else str(conv.user1_id)
+                            await manager.send_personal_message({
+                                "type": "typing",
+                                "conversation_id": conversation_id,
+                                "user_id": user_id,
+                                "is_typing": is_typing,
+                            }, other_user_id)
+                    finally:
+                        db.close()
+
+                elif msg_type == "message_read":
+                    # Client confirms a specific message was read
+                    message_id = payload.get("message_id")
+                    conversation_id = payload.get("conversation_id")
+                    
+                    from app.database import SessionLocal
+                    db = SessionLocal()
+                    try:
+                        msg = db.query(Message).filter(Message.id == message_id).first()
+                        if msg and not msg.is_read:
+                            msg.is_read = True
+                            msg.read_at = datetime.now(timezone.utc)
+                            db.commit()
+                            
+                            # Notify the sender
+                            await manager.send_personal_message({
+                                "type": "message_read",
+                                "conversation_id": conversation_id,
+                                "message_id": message_id,
+                                "reader_id": user_id,
+                                "read_at": msg.read_at.isoformat(),
+                            }, str(msg.sender_id))
+                    finally:
+                        db.close()
+
+            except Exception as e:
+                print(f"WebSocket message processing error: {e}")
+
     except WebSocketDisconnect:
-        manager.disconnect(user_id)
+        manager.disconnect(websocket, user_id)
