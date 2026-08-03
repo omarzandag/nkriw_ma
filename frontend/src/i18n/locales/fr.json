@@ -217,6 +217,7 @@
   "forum": {
     "title": "Forum communautaire",
     "createThread": "Créer un sujet",
+    "searchPlaceholder": "Rechercher des sujets par titre...",
     "threadTitle": "Titre du sujet",
     "category": "Catégorie",
     "content": "Contenu",

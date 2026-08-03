@@ -217,6 +217,7 @@
   "forum": {
     "title": "المنتدى المجتمعي",
     "createThread": "إنشاء موضوع",
+    "searchPlaceholder": "ابحث عن المواضيع بالعنوان...",
     "threadTitle": "عنوان الموضوع",
     "category": "الفئة",
     "content": "المحتوى",

@@ -217,6 +217,7 @@
   "forum": {
     "title": "Community Forum",
     "createThread": "Create Thread",
+    "searchPlaceholder": "Search threads by title...",
     "threadTitle": "Thread Title",
     "category": "Category",
     "content": "Content",

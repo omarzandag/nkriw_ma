@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { forumAPI } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
-import { FaPlus, FaComments, FaEye, FaThumbtack } from 'react-icons/fa'
+import { FaPlus, FaComments, FaEye, FaThumbtack, FaSearch } from 'react-icons/fa'
 import Pagination from '../../components/Pagination'
 import '../housing/Housing.css'
 
@@ -15,6 +15,8 @@ export default function ForumListPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [category, setCategory] = useState('')
+  const [search, setSearch] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState('')
 
   const categories = ['housing', 'colocation', 'transportation', 'universities', 'student_life', 'general', 'help']
 
@@ -23,6 +25,7 @@ export default function ForumListPage() {
     try {
       const params = { page, per_page: 15 }
       if (category) params.category = category
+      if (searchKeyword) params.keyword = searchKeyword
       const response = await forumAPI.listThreads(params)
       setThreads(response.data.items)
       setTotalPages(response.data.pages)
@@ -30,7 +33,13 @@ export default function ForumListPage() {
     setLoading(false)
   }
 
-  useEffect(() => { fetchThreads() }, [page, category])
+  const handleSearch = (e) => {
+    e.preventDefault()
+    setSearchKeyword(search.trim())
+    setPage(1)
+  }
+
+  useEffect(() => { fetchThreads() }, [page, category, searchKeyword])
 
   return (
     <div className="page-container">
@@ -41,6 +50,19 @@ export default function ForumListPage() {
             <Link to="/forum/create" className="btn btn-primary"><FaPlus /> {t('forum.createThread')}</Link>
           )}
         </div>
+
+        <form className="forum-search-bar" onSubmit={handleSearch}>
+          <input
+            type="text"
+            className="form-input forum-search-input"
+            placeholder={t('forum.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button type="submit" className="btn btn-primary">
+            <FaSearch /> {t('common.search')}
+          </button>
+        </form>
 
         <div className="flex gap-sm mb-4 flex-wrap">
           <button className={`btn btn-sm ${category === '' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setCategory(''); setPage(1) }}>

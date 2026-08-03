@@ -303,3 +303,25 @@
   cursor: pointer;
   font-size: 10px;
 }
+
+/* Forum search bar */
+.forum-search-bar {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.forum-search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .forum-search-bar {
+    flex-direction: column;
+  }
+
+  .forum-search-input {
+    width: 100%;
+  }
+}
