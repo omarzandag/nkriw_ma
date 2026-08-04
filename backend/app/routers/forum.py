@@ -250,7 +250,7 @@ def create_reply(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Create a reply on a thread."""
+    """Create a reply on a thread (supports nested replies via parent_id)."""
     thread = db.query(ForumThread).filter(ForumThread.id == thread_id).first()
     if not thread:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found")
@@ -258,22 +258,45 @@ def create_reply(
     if thread.is_closed and not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Thread is closed")
 
+    parent_reply = None
+    if request.parent_id:
+        parent_reply = db.query(ForumReply).filter(ForumReply.id == request.parent_id).first()
+        if not parent_reply:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent reply not found")
+        if parent_reply.thread_id != thread_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Parent reply does not belong to this thread",
+            )
+
     reply = ForumReply(
         thread_id=thread_id,
         user_id=current_user.id,
         content=request.content,
+        parent_id=request.parent_id,
     )
     db.add(reply)
     db.commit()
     db.refresh(reply)
 
-    # Notify thread author
-    if thread.user_id != current_user.id:
+    # Notify thread author (only for top-level replies)
+    if not parent_reply and thread.user_id != current_user.id:
         create_notification(
             db,
             user_id=thread.user_id,
             type="reply",
             title=f"{current_user.username} replied to your thread",
+            body=request.content[:100],
+            link=f"/forum/{thread_id}",
+        )
+
+    # Notify parent reply author (for nested replies)
+    if parent_reply and parent_reply.user_id != current_user.id:
+        create_notification(
+            db,
+            user_id=parent_reply.user_id,
+            type="reply",
+            title=f"{current_user.username} replied to your comment",
             body=request.content[:100],
             link=f"/forum/{thread_id}",
         )

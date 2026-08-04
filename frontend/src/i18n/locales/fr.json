@@ -223,6 +223,8 @@
     "content": "Contenu",
     "replies": "Réponses",
     "reply": "Répondre",
+    "replyTo": "Répondre à",
+    "noReplies": "Aucune réponse pour l'instant. Soyez le premier à répondre!",
     "like": "J'aime",
     "unlike": "Je n'aime plus",
     "editReply": "Modifier la réponse",

@@ -10,7 +10,7 @@ class ForumReplyBase(BaseModel):
 
 
 class ForumReplyCreate(ForumReplyBase):
-    pass
+    parent_id: UUID | None = None
 
 
 class ForumReplyUpdate(BaseModel):
@@ -23,6 +23,7 @@ class ForumReplyResponse(ForumReplyBase):
     id: UUID
     thread_id: UUID
     user_id: UUID
+    parent_id: UUID | None = None
     created_at: datetime
     last_update: datetime
     likes_count: int = 0

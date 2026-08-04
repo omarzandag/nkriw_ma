@@ -36,19 +36,21 @@ class ForumThread(Base):
 
 
 class ForumReply(Base):
-    """Reply to a forum thread."""
+    """Reply to a forum thread (supports nested replies via parent_id)."""
 
     __tablename__ = "forum_replies"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     thread_id = Column(UUID(as_uuid=True), ForeignKey("forum_threads.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("forum_replies.id", ondelete="CASCADE"), nullable=True, index=True)
 
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_update = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     likes = relationship("ReplyLike", backref="reply", cascade="all, delete-orphan")
+    children = relationship("ForumReply", backref="parent", remote_side=[id])
 
 
 class ReplyLike(Base):

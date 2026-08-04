@@ -21,13 +21,28 @@ def add_missing_columns():
     db = SessionLocal()
     try:
         inspector = inspect(db.bind)
-        columns = [col["name"] for col in inspector.get_columns("messages")]
 
         # Add read_at column to messages table if missing
-        if "read_at" not in columns:
+        msg_columns = [col["name"] for col in inspector.get_columns("messages")]
+        if "read_at" not in msg_columns:
             db.execute(text("ALTER TABLE messages ADD COLUMN read_at TIMESTAMP WITHOUT TIME ZONE"))
             db.commit()
             print("Added 'read_at' column to messages table")
+
+        # Add parent_id column to forum_replies table if missing (for nested replies)
+        reply_columns = [col["name"] for col in inspector.get_columns("forum_replies")]
+        if "parent_id" not in reply_columns:
+            db.execute(text(
+                "ALTER TABLE forum_replies ADD COLUMN parent_id UUID "
+                "REFERENCES forum_replies(id) ON DELETE CASCADE"
+            ))
+            db.commit()
+            db.execute(text(
+                "CREATE INDEX IF NOT EXISTS ix_forum_replies_parent_id "
+                "ON forum_replies (parent_id)"
+            ))
+            db.commit()
+            print("Added 'parent_id' column to forum_replies table")
     except Exception as e:
         db.rollback()
         print(f"Schema check completed (may already be up to date): {e}")

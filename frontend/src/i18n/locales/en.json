@@ -223,6 +223,8 @@
     "content": "Content",
     "replies": "Replies",
     "reply": "Reply",
+    "replyTo": "Replying to",
+    "noReplies": "No replies yet. Be the first to reply!",
     "like": "Like",
     "unlike": "Unlike",
     "editReply": "Edit Reply",

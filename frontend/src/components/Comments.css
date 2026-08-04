@@ -113,3 +113,44 @@
 .reply-form {
   margin-top: var(--spacing-md);
 }
+
+/* Nested replies (reply-to-reply) */
+.reply-children {
+  margin-left: 24px;
+  padding-left: var(--spacing-md);
+  border-left: 2px solid var(--color-gray-200);
+}
+
+[dir="rtl"] .reply-children {
+  margin-left: 0;
+  margin-right: 24px;
+  padding-left: 0;
+  padding-right: var(--spacing-md);
+  border-left: none;
+  border-right: 2px solid var(--color-gray-200);
+}
+
+.reply-nested .card {
+  background-color: var(--color-gray-50);
+}
+
+.reply-to-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--color-gray-500);
+  background-color: var(--color-gray-100);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  margin-left: var(--spacing-xs);
+}
+
+[dir="rtl"] .reply-to-indicator {
+  margin-left: 0;
+  margin-right: var(--spacing-xs);
+}
+
+.reply-to-indicator svg {
+  font-size: 0.7rem;
+}

@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { forumAPI } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
-import { FaHeart, FaEdit, FaTrash, FaPaperPlane, FaThumbtack, FaLock, FaBell, FaBellSlash } from 'react-icons/fa'
+import { FaHeart, FaEdit, FaTrash, FaPaperPlane, FaThumbtack, FaLock, FaBell, FaBellSlash, FaReply } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 
 export default function ForumThreadPage() {
@@ -17,6 +17,8 @@ export default function ForumThreadPage() {
   const [newReply, setNewReply] = useState('')
   const [editingReply, setEditingReply] = useState(null)
   const [editText, setEditText] = useState('')
+  const [replyingTo, setReplyingTo] = useState(null)
+  const [replyText, setReplyText] = useState('')
   const [isFollowing, setIsFollowing] = useState(false)
   const [followersCount, setFollowersCount] = useState(0)
   const [followLoading, setFollowLoading] = useState(false)
@@ -37,12 +39,34 @@ export default function ForumThreadPage() {
 
   useEffect(() => { fetchData() }, [id])
 
-  const handleReply = async (e) => {
+  const buildReplyTree = (flatReplies) => {
+    const replyMap = {}
+    const roots = []
+    flatReplies.forEach((reply) => {
+      replyMap[reply.id] = { ...reply, children: [] }
+    })
+    flatReplies.forEach((reply) => {
+      if (reply.parent_id && replyMap[reply.parent_id]) {
+        replyMap[reply.parent_id].children.push(replyMap[reply.id])
+      } else {
+        roots.push(replyMap[reply.id])
+      }
+    })
+    return roots
+  }
+
+  const handleReply = async (e, parentId = null) => {
     e.preventDefault()
-    if (!newReply.trim()) return
+    const content = parentId ? replyText : newReply
+    if (!content.trim()) return
     try {
-      await forumAPI.createReply(id, { content: newReply })
-      setNewReply('')
+      await forumAPI.createReply(id, { content, parent_id: parentId })
+      if (parentId) {
+        setReplyText('')
+        setReplyingTo(null)
+      } else {
+        setNewReply('')
+      }
       fetchData()
       toast.success('Reply added')
     } catch (error) { toast.error('Failed') }
@@ -96,6 +120,101 @@ export default function ForumThreadPage() {
   if (!thread) return <div className="empty-state"><h3>Not found</h3></div>
 
   const isOwner = user && (user.id === thread.user_id || user.is_admin)
+  const replyTree = buildReplyTree(replies)
+
+  const renderReply = (reply, depth = 0) => {
+    const replyOwner = user && (user.id === reply.user_id || user.is_admin)
+    const parentReply = reply.parent_id ? replies.find((r) => r.id === reply.parent_id) : null
+    return (
+      <div key={reply.id} className={depth > 0 ? 'reply-nested' : ''}>
+        <div className="card mb-3">
+          <div className="card-body">
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-sm">
+                {reply.profile_picture ? (
+                  <Link to={`/users/${reply.username}`}>
+                    <img src={reply.profile_picture} alt={reply.username} className="reply-avatar" />
+                  </Link>
+                ) : (
+                  <Link to={`/users/${reply.username}`}>
+                    <div className="reply-avatar-placeholder">{reply.username?.charAt(0)?.toUpperCase()}</div>
+                  </Link>
+                )}
+                <Link to={`/users/${reply.username}`} className="font-semibold text-sm">
+                  {reply.username || 'User'}
+                </Link>
+                {parentReply && (
+                  <span className="reply-to-indicator">
+                    <FaReply /> {parentReply.username}
+                  </span>
+                )}
+              </div>
+              <span className="text-sm text-gray">{new Date(reply.created_at).toLocaleDateString()}</span>
+            </div>
+            {editingReply === reply.id ? (
+              <div>
+                <textarea className="form-textarea" value={editText} onChange={(e) => setEditText(e.target.value)} />
+                <div className="flex gap-sm mt-2">
+                  <button className="btn btn-primary btn-sm" onClick={() => handleEditReply(reply.id)}>{t('common.save')}</button>
+                  <button className="btn btn-outline btn-sm" onClick={() => setEditingReply(null)}>{t('common.cancel')}</button>
+                </div>
+              </div>
+            ) : (
+              <p>{reply.content}</p>
+            )}
+            <div className="flex gap-md mt-3">
+              <button className="comment-action-btn" onClick={() => handleLike(reply.id)}>
+                <FaHeart className={reply.liked_by_me ? 'liked' : ''} /> {reply.likes_count}
+              </button>
+              {isAuthenticated && !thread.is_closed && (
+                <button
+                  className="comment-action-btn"
+                  onClick={() => {
+                    setReplyingTo(replyingTo === reply.id ? null : reply.id)
+                    setReplyText('')
+                    setEditingReply(null)
+                  }}
+                >
+                  <FaReply /> {t('forum.reply')}
+                </button>
+              )}
+              {replyOwner && (
+                <>
+                  <button className="comment-action-btn" onClick={() => { setEditingReply(reply.id); setEditText(reply.content); setReplyingTo(null) }}>
+                    <FaEdit /> {t('common.edit')}
+                  </button>
+                  <button className="comment-action-btn" onClick={() => handleDeleteReply(reply.id)}>
+                    <FaTrash /> {t('common.delete')}
+                  </button>
+                </>
+              )}
+            </div>
+            {replyingTo === reply.id && (
+              <form onSubmit={(e) => handleReply(e, reply.id)} className="mt-3">
+                <textarea
+                  className="form-textarea"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder={`${t('forum.replyTo')} ${reply.username}...`}
+                  required
+                  autoFocus
+                />
+                <div className="flex gap-sm mt-2">
+                  <button type="submit" className="btn btn-primary btn-sm"><FaPaperPlane /> {t('common.submit')}</button>
+                  <button type="button" className="btn btn-outline btn-sm" onClick={() => { setReplyingTo(null); setReplyText('') }}>{t('common.cancel')}</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+        {reply.children && reply.children.length > 0 && (
+          <div className="reply-children">
+            {reply.children.map((child) => renderReply(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="page-container">
@@ -151,62 +270,15 @@ export default function ForumThreadPage() {
 
         <h3 className="font-semibold mb-3">{t('forum.replies')} ({replies.length})</h3>
         <div className="replies-list">
-            {replies.map((reply) => {
-            const replyOwner = user && (user.id === reply.user_id || user.is_admin)
-            return (
-              <div key={reply.id} className="card mb-3">
-                <div className="card-body">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center gap-sm">
-                      {reply.profile_picture ? (
-                        <Link to={`/users/${reply.username}`}>
-                          <img src={reply.profile_picture} alt={reply.username} className="reply-avatar" />
-                        </Link>
-                      ) : (
-                        <Link to={`/users/${reply.username}`}>
-                          <div className="reply-avatar-placeholder">{reply.username?.charAt(0)?.toUpperCase()}</div>
-                        </Link>
-                      )}
-                      <Link to={`/users/${reply.username}`} className="font-semibold text-sm">
-                        {reply.username || 'User'}
-                      </Link>
-                    </div>
-                    <span className="text-sm text-gray">{new Date(reply.created_at).toLocaleDateString()}</span>
-                  </div>
-                  {editingReply === reply.id ? (
-                    <div>
-                      <textarea className="form-textarea" value={editText} onChange={(e) => setEditText(e.target.value)} />
-                      <div className="flex gap-sm mt-2">
-                        <button className="btn btn-primary btn-sm" onClick={() => handleEditReply(reply.id)}>{t('common.save')}</button>
-                        <button className="btn btn-outline btn-sm" onClick={() => setEditingReply(null)}>{t('common.cancel')}</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p>{reply.content}</p>
-                  )}
-                  <div className="flex gap-md mt-3">
-                    <button className="comment-action-btn" onClick={() => handleLike(reply.id)}>
-                      <FaHeart className={reply.liked_by_me ? 'liked' : ''} /> {reply.likes_count}
-                    </button>
-                    {replyOwner && (
-                      <>
-                        <button className="comment-action-btn" onClick={() => { setEditingReply(reply.id); setEditText(reply.content) }}>
-                          <FaEdit /> {t('common.edit')}
-                        </button>
-                        <button className="comment-action-btn" onClick={() => handleDeleteReply(reply.id)}>
-                          <FaTrash /> {t('common.delete')}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+          {replyTree.length === 0 ? (
+            <p className="text-gray">{t('forum.noReplies')}</p>
+          ) : (
+            replyTree.map((reply) => renderReply(reply))
+          )}
         </div>
 
         {isAuthenticated && !thread.is_closed && (
-          <form onSubmit={handleReply} className="card mt-4">
+          <form onSubmit={(e) => handleReply(e)} className="card mt-4">
             <div className="card-body">
               <h3 className="font-semibold mb-2">{t('forum.reply')}</h3>
               <textarea className="form-textarea" value={newReply} onChange={(e) => setNewReply(e.target.value)} required />
