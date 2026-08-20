@@ -212,7 +212,22 @@
     "myTrips": "My Trips",
     "active": "Active",
     "completed": "Completed",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "bookSeat": "Book Seats",
+    "requestBooking": "Request Booking",
+    "seatsToBook": "Seats to book",
+    "bookingSuccess": "Reservation request sent successfully!",
+    "cancelBooking": "Cancel Reservation",
+    "bookingCancelled": "Reservation cancelled successfully!",
+    "noSeatsLeft": "No seats left",
+    "bookingRequests": "Booking Requests",
+    "noRequests": "No booking requests yet",
+    "loginToBook": "Log in to book a seat",
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "myReservations": "My Reservations",
+    "incomingRequests": "Incoming Requests"
   },
   "forum": {
     "title": "Community Forum",

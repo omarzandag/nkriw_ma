@@ -212,7 +212,22 @@
     "myTrips": "رحلاتي",
     "active": "نشطة",
     "completed": "مكتملة",
-    "cancelled": "ملغاة"
+    "cancelled": "ملغاة",
+    "bookSeat": "حجز مقاعد",
+    "requestBooking": "طلب الحجز",
+    "seatsToBook": "المقاعد المطلوب حجزها",
+    "bookingSuccess": "تم إرسال طلب الحجز بنجاح!",
+    "cancelBooking": "إلغاء الحجز",
+    "bookingCancelled": "تم إلغاء الحجز بنجاح!",
+    "noSeatsLeft": "لا توجد مقاعد متبقية",
+    "bookingRequests": "طلبات الحجز",
+    "noRequests": "لا توجد طلبات حجز بعد",
+    "loginToBook": "سجل الدخول لحجز مقعد",
+    "pending": "قيد الانتظار",
+    "accepted": "مقبولة",
+    "rejected": "مرفوضة",
+    "myReservations": "حجوزاتي",
+    "incomingRequests": "الطلبات الواردة"
   },
   "forum": {
     "title": "المنتدى المجتمعي",

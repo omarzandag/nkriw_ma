@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { usersAPI, messagingAPI } from '../../services/api'
+import { usersAPI, messagingAPI, carpoolAPI } from '../../services/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { FaEdit, FaMapMarkerAlt, FaCalendarAlt, FaHome, FaComments, FaComment, FaPaperPlane } from 'react-icons/fa'
 import toast from 'react-hot-toast'
@@ -15,29 +15,80 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        if (username) {
-          const response = await usersAPI.getPublicProfile(username)
-          setProfile(response.data)
-        } else if (currentUser) {
-          const response = await usersAPI.getProfile()
-          setProfile(response.data)
-        }
-      } catch (error) {
-        console.error('Failed to load profile:', error)
-      }
-      setLoading(false)
+  const [myReservations, setMyReservations] = useState([])
+  const [incomingRequests, setIncomingRequests] = useState([])
+
+  const isOwnProfile = currentUser && profile && currentUser.id === profile.id
+
+  const fetchUserBookings = async () => {
+    try {
+      const res1 = await carpoolAPI.getMyReservations()
+      setMyReservations(res1.data)
+      const res2 = await carpoolAPI.getMyIncomingRequests()
+      setIncomingRequests(res2.data)
+    } catch (e) {
+      console.error('Failed to load bookings:', e)
     }
+  }
+
+  const fetchProfile = async () => {
+    try {
+      if (username) {
+        const response = await usersAPI.getPublicProfile(username)
+        setProfile(response.data)
+      } else if (currentUser) {
+        const response = await usersAPI.getProfile()
+        setProfile(response.data)
+      }
+    } catch (error) {
+      console.error('Failed to load profile:', error)
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
     fetchProfile()
   }, [username, currentUser])
 
+  useEffect(() => {
+    if (isOwnProfile) {
+      fetchUserBookings()
+    }
+  }, [profile])
+
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm('Annuler cette réservation ?')) return
+    try {
+      await carpoolAPI.cancelBooking(bookingId)
+      toast.success(t('carpool.bookingCancelled'))
+      await fetchUserBookings()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Erreur')
+    }
+  }
+
+  const handleAcceptBooking = async (bookingId) => {
+    try {
+      await carpoolAPI.acceptBooking(bookingId)
+      toast.success('Demande acceptée !')
+      await fetchUserBookings()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Erreur')
+    }
+  }
+
+  const handleRejectBooking = async (bookingId) => {
+    try {
+      await carpoolAPI.rejectBooking(bookingId)
+      toast.success('Demande refusée')
+      await fetchUserBookings()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Erreur')
+    }
+  }
+
   if (loading) return <div className="loading-container"><div className="spinner"></div></div>
   if (!profile) return <div className="empty-state"><h3>Profile not found</h3></div>
-
-  const isOwnProfile = currentUser && currentUser.id === profile.id
-
   const handleStartMessage = async () => {
     try {
       await messagingAPI.startConversation(profile.id, { content: 'Hello!' })
@@ -134,6 +185,100 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {isOwnProfile && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '20px' }}>
+            {/* My Reservations Card */}
+            <div className="card">
+              <div className="card-body">
+                <h3 className="font-semibold mb-3">{t('carpool.myReservations')}</h3>
+                {myReservations.length === 0 ? (
+                  <p className="text-gray text-sm">Aucune réservation de trajet soumise.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {myReservations.map(r => (
+                      <div key={r.id} style={{ borderBottom: '1px solid var(--color-gray-100)', paddingBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <div className="font-bold text-sm">
+                              {r.departure_city} &rarr; {r.destination_city}
+                            </div>
+                            <span className="text-xs text-gray" style={{ display: 'block', marginTop: '4px' }}>
+                              Date: {new Date(r.departure_date).toLocaleDateString()} | Places: {r.seats_requested}
+                            </span>
+                          </div>
+                          <span className={`badge badge-${r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : r.status === 'rejected' ? 'danger' : 'gray'}`}>
+                            {t(`carpool.${r.status}`)}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                          <span className="text-xs text-gray">Cond. @{r.driver_username}</span>
+                          {(r.status === 'pending' || r.status === 'accepted') && (
+                            <button
+                              onClick={() => handleCancelBooking(r.id)}
+                              className="btn btn-outline btn-sm text-danger"
+                              style={{ padding: '2px 8px', fontSize: '11px', borderColor: 'var(--color-danger)' }}
+                            >
+                              Annuler
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Received Reservation Requests Card */}
+            <div className="card">
+              <div className="card-body">
+                <h3 className="font-semibold mb-3">{t('carpool.incomingRequests')}</h3>
+                {incomingRequests.length === 0 ? (
+                  <p className="text-gray text-sm">Aucune demande reçue pour vos trajets.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {incomingRequests.map(r => (
+                      <div key={r.id} style={{ borderBottom: '1px solid var(--color-gray-100)', paddingBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <div className="font-bold text-sm">
+                              {r.departure_city} &rarr; {r.destination_city}
+                            </div>
+                            <span className="text-xs text-gray" style={{ display: 'block', marginTop: '4px' }}>
+                              Passager: <Link to={`/users/${r.passenger_username}`}>@{r.passenger_username}</Link> | Places: {r.seats_requested}
+                            </span>
+                          </div>
+                          <span className={`badge badge-${r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'danger'}`}>
+                            {t(`carpool.${r.status}`)}
+                          </span>
+                        </div>
+                        {r.status === 'pending' && (
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                            <button
+                              onClick={() => handleAcceptBooking(r.id)}
+                              className="btn btn-primary btn-sm"
+                              style={{ padding: '2px 8px', fontSize: '11px' }}
+                            >
+                              Accepter
+                            </button>
+                            <button
+                              onClick={() => handleRejectBooking(r.id)}
+                              className="btn btn-outline btn-sm text-danger"
+                              style={{ padding: '2px 8px', fontSize: '11px', borderColor: 'var(--color-danger)' }}
+                            >
+                              Refuser
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

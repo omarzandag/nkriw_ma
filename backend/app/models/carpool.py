@@ -10,6 +10,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
 
+from sqlalchemy.orm import relationship
+
 class CarpoolAd(Base):
     """Carpool advertisement for shared transportation between cities."""
 
@@ -46,3 +48,24 @@ class CarpoolAd(Base):
     publication_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_update = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     views = Column(Integer, default=0)
+
+    # Relationships
+    bookings = relationship("CarpoolBooking", back_populates="carpool_ad", cascade="all, delete-orphan")
+
+
+class CarpoolBooking(Base):
+    """Carpool booking space reservation."""
+
+    __tablename__ = "carpool_bookings"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    carpool_ad_id = Column(UUID(as_uuid=True), ForeignKey("carpool_ads.id", ondelete="CASCADE"), nullable=False)
+    passenger_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    seats_requested = Column(Integer, nullable=False, default=1)
+    status = Column(String(20), default="pending")  # pending, accepted, rejected, cancelled
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    last_update = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    carpool_ad = relationship("CarpoolAd", back_populates="bookings")
+    passenger = relationship("User", backref="carpool_bookings")

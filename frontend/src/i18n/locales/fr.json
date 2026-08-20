@@ -212,7 +212,22 @@
     "myTrips": "Mes trajets",
     "active": "Actif",
     "completed": "Terminé",
-    "cancelled": "Annulé"
+    "cancelled": "Annulé",
+    "bookSeat": "Réserver des places",
+    "requestBooking": "Demander à réserver",
+    "seatsToBook": "Nombre de places",
+    "bookingSuccess": "Demande de réservation envoyée avec succès !",
+    "cancelBooking": "Annuler la réservation",
+    "bookingCancelled": "Réservation annulée avec succès !",
+    "noSeatsLeft": "Plus de places disponibles",
+    "bookingRequests": "Demandes de réservation",
+    "noRequests": "Aucune demande de réservation",
+    "loginToBook": "Connectez-vous pour réserver",
+    "pending": "En attente",
+    "accepted": "Acceptée",
+    "rejected": "Refusée",
+    "myReservations": "Mes Réservations",
+    "incomingRequests": "Demandes Reçues"
   },
   "forum": {
     "title": "Forum communautaire",

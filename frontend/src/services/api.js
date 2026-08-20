@@ -9,13 +9,15 @@ const api = axios.create({
   },
 })
 
-// Request interceptor - attach JWT token
+// Request interceptor - attach JWT token & Lang
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('nkriwma_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    const lang = localStorage.getItem('i18nextLng') || 'fr'
+    config.headers['Accept-Language'] = lang
     return config
   },
   (error) => Promise.reject(error)
@@ -114,6 +116,13 @@ export const carpoolAPI = {
   delete: (id) => api.delete(`/carpool/${id}`),
   markCompleted: (id) => api.post(`/carpool/${id}/mark-completed`),
   getMyAds: (params) => api.get('/carpool/my/ads', { params }),
+  createBooking: (id, data) => api.post(`/carpool/${id}/bookings`, data),
+  getBookings: (id) => api.get(`/carpool/${id}/bookings`),
+  getMyReservations: () => api.get('/carpool/bookings/my/reservations'),
+  getMyIncomingRequests: () => api.get('/carpool/bookings/my/requests'),
+  acceptBooking: (bookingId) => api.post(`/carpool/bookings/${bookingId}/accept`),
+  rejectBooking: (bookingId) => api.post(`/carpool/bookings/${bookingId}/reject`),
+  cancelBooking: (bookingId) => api.post(`/carpool/bookings/${bookingId}/cancel`),
 }
 
 // Forum API
