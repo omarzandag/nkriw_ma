@@ -56,12 +56,20 @@ Built with **FastAPI** on the backend and **React.js + Vite** on the frontend, N
 - Report users, ads, comments, and messages
 - Admin review panel with action capabilities
 
+### 🔐 Password Reset (OTP via Email)
+- Users reset their password from the login page ("Forgot password?")
+- 3-step flow: enter email → receive a 6-digit OTP by email → set a new password
+- OTP expires after 10 minutes, max 5 wrong attempts, 60-second resend cooldown
+- SMTP credentials are **configured by the admin from the dashboard** (Admin → Email Settings)
+- A built-in test email verifies the SMTP configuration before going live
+
 ### 🛡️ Admin Dashboard
 - Platform-wide statistics and charts (Recharts)
 - Registration trends over time
 - Ads per city breakdown
 - User management: ban, suspend, delete
 - Content moderation: review and action on reports
+- **Email / SMTP settings** (admin-configurable)
 
 ### 🌍 Multilingual (i18n)
 - Arabic (RTL layout)
@@ -349,6 +357,20 @@ npm run build
 | `APP_NAME` | `NKRIW.MA` | App name shown in API docs |
 | `APP_VERSION` | `1.0.0` | App version |
 | `DEBUG` | `True` | Debug mode (set `False` in production) |
+| `SMTP_ENABLED` | `False` | Enable email sending (override from Admin → Email Settings) |
+| `SMTP_HOST` | `smtp.gmail.com` | SMTP server host |
+| `SMTP_PORT` | `587` | SMTP port (587 STARTTLS / 465 SSL) |
+| `SMTP_USER` | *(empty)* | SMTP username |
+| `SMTP_FROM_EMAIL` | *(empty)* | Sender email address |
+| `SMTP_FROM_NAME` | `NKRIW.MA` | Sender display name |
+| `SMTP_USE_TLS` | `True` | Use STARTTLS (port 587) |
+| `SMTP_USE_SSL` | `False` | Use implicit SSL (port 465) |
+| `RESET_OTP_TTL_MINUTES` | `10` | Password reset OTP lifetime |
+| `RESET_OTP_MAX_ATTEMPTS` | `5` | Max wrong OTP attempts before lockout |
+
+> 💡 **SMTP is configured from the Admin Dashboard** (Admin → Email Settings), not only via `.env`.
+> The dashboard values override the `.env` bootstrap defaults. The SMTP password is stored in the
+> database and never returned by the API.
 
 ---
 
@@ -363,8 +385,9 @@ npm run build
 | `POST` | `/login` | Login (returns JWT) |
 | `GET` | `/me` | Get current authenticated user |
 | `POST` | `/logout` | Logout |
-| `POST` | `/forgot-password` | Request password reset |
-| `POST` | `/reset-password` | Reset password with token |
+| `POST` | `/forgot-password` | Request a password reset OTP (emailed) |
+| `POST` | `/verify-otp` | Verify a password reset OTP |
+| `POST` | `/reset-password` | Reset password using email + OTP |
 | `POST` | `/change-password` | Change password (authenticated) |
 
 ### Users — `/api/users`
@@ -467,6 +490,9 @@ npm run build
 | `POST` | `/users/{id}/ban` | Ban a user |
 | `POST` | `/users/{id}/suspend` | Suspend a user |
 | `DELETE` | `/users/{id}` | Permanently delete a user |
+| `GET` | `/settings/smtp` | Get SMTP configuration (password masked) |
+| `PUT` | `/settings/smtp` | Update SMTP configuration |
+| `POST` | `/settings/smtp/test` | Send a test email to verify SMTP |
 
 ---
 

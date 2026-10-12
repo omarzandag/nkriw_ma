@@ -8,7 +8,6 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
-import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import HousingListPage from './pages/housing/HousingListPage'
 import HousingDetailPage from './pages/housing/HousingDetailPage'
 import HousingCreatePage from './pages/housing/HousingCreatePage'
@@ -28,6 +27,7 @@ import EditProfilePage from './pages/profile/EditProfilePage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminReportsPage from './pages/admin/AdminReportsPage'
+import AdminSettingsPage from './pages/admin/AdminSettingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function App() {
@@ -40,7 +40,6 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Housing routes */}
           <Route path="/housing" element={<HousingListPage />} />
@@ -81,6 +80,7 @@ function App() {
           <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboardPage /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminUsersPage /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute adminOnly><AdminReportsPage /></ProtectedRoute>} />
+          <Route path="/admin/settings" element={<ProtectedRoute adminOnly><AdminSettingsPage /></ProtectedRoute>} />
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />

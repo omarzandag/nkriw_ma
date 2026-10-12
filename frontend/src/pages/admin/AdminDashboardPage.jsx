@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { adminAPI } from '../../services/api'
-import { FaUsers, FaHome, FaCar, FaComments, FaFlag, FaBan, FaChartBar } from 'react-icons/fa'
+import { FaUsers, FaHome, FaCar, FaComments, FaFlag, FaBan, FaChartBar, FaCog } from 'react-icons/fa'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
 import './Admin.css'
 
@@ -52,6 +52,7 @@ export default function AdminDashboardPage() {
         <div className="flex gap-md mb-4">
           <Link to="/admin/users" className="btn btn-outline"><FaUsers /> {t('admin.manageUsers')}</Link>
           <Link to="/admin/reports" className="btn btn-outline"><FaFlag /> {t('admin.manageReports')}</Link>
+          <Link to="/admin/settings" className="btn btn-outline"><FaCog /> {t('admin.emailSettings')}</Link>
         </div>
 
         {/* Stats cards */}

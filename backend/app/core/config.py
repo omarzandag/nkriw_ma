@@ -32,6 +32,20 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     MAX_FILE_SIZE_MB: int = 5
 
+    # SMTP (bootstrap defaults — overridable by admin in the dashboard)
+    SMTP_ENABLED: bool = False
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_FROM_NAME: str = "NKRIW.MA"
+    SMTP_USE_TLS: bool = True   # STARTTLS (port 587)
+    SMTP_USE_SSL: bool = False  # Implicit SSL (port 465)
+
+    # Password reset OTP
+    RESET_OTP_TTL_MINUTES: int = 10
+    RESET_OTP_MAX_ATTEMPTS: int = 5
+
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

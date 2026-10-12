@@ -35,9 +35,16 @@ class ForgotPasswordRequest(BaseModel):
 
 
 class ResetPasswordRequest(BaseModel):
-    """Reset password request."""
-    token: str
+    """Reset password with the OTP code received by email."""
+    email: EmailStr
+    otp: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
     new_password: str = Field(min_length=6, max_length=100)
+
+
+class VerifyOtpRequest(BaseModel):
+    """Verify a password reset OTP before setting the new password."""
+    email: EmailStr
+    otp: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
 
 
 class ChangePasswordRequest(BaseModel):

@@ -45,6 +45,7 @@ export const authAPI = {
   getMe: () => api.get('/auth/me'),
   logout: () => api.post('/auth/logout'),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  verifyOtp: (data) => api.post('/auth/verify-otp', data),
   resetPassword: (data) => api.post('/auth/reset-password', data),
   changePassword: (data) => api.post('/auth/change-password', data),
 }
@@ -203,6 +204,10 @@ export const adminAPI = {
   deleteThread: (id) => api.delete(`/admin/forum/threads/${id}`),
   deleteReply: (id) => api.delete(`/admin/forum/replies/${id}`),
   deleteComment: (id) => api.delete(`/admin/comments/${id}`),
+  // SMTP / email settings
+  getSmtpSettings: () => api.get('/admin/settings/smtp'),
+  updateSmtpSettings: (data) => api.put('/admin/settings/smtp', data),
+  testSmtpEmail: (data) => api.post('/admin/settings/smtp/test', data),
 }
 
 export default api

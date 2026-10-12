@@ -40,3 +40,19 @@
 .admin-table tr:hover {
   background-color: var(--color-gray-50);
 }
+
+/* OTP input boxes (password reset flow) */
+.otp-input {
+  width: 44px !important;
+  height: 52px;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 0;
+}
+
+.alert-warning {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}

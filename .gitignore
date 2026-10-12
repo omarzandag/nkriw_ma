@@ -39,3 +39,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+*.continue
+.continue/
+continue/
+.continue

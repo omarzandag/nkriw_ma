@@ -43,6 +43,21 @@ def add_missing_columns():
             ))
             db.commit()
             print("Added 'parent_id' column to forum_replies table")
+
+        # Add password reset OTP columns to users table if missing
+        user_columns = [col["name"] for col in inspector.get_columns("users")]
+        if "reset_otp" not in user_columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN reset_otp VARCHAR(10)"))
+            db.commit()
+            print("Added 'reset_otp' column to users table")
+        if "reset_otp_expires" not in user_columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN reset_otp_expires TIMESTAMP WITHOUT TIME ZONE"))
+            db.commit()
+            print("Added 'reset_otp_expires' column to users table")
+        if "reset_otp_attempts" not in user_columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN reset_otp_attempts INTEGER NOT NULL DEFAULT 0"))
+            db.commit()
+            print("Added 'reset_otp_attempts' column to users table")
     except Exception as e:
         db.rollback()
         print(f"Schema check completed (may already be up to date): {e}")
@@ -119,7 +134,7 @@ Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
 # Include routers
-from app.routers import auth, users, housing, colocation, carpool, forum, messaging, comments, notifications, reports, admin
+from app.routers import auth, users, housing, colocation, carpool, forum, messaging, comments, notifications, reports, admin, admin_settings
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -132,6 +147,7 @@ app.include_router(comments.router)
 app.include_router(notifications.router)
 app.include_router(reports.router)
 app.include_router(admin.router)
+app.include_router(admin_settings.router)
 
 
 @app.get("/", tags=["Root"])

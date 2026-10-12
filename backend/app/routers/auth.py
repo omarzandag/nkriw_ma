@@ -1,5 +1,6 @@
 """Authentication router: register, login, logout, password reset."""
 
+import secrets
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -9,7 +10,6 @@ from app.core.security import (
     verify_password,
     get_password_hash,
     create_access_token,
-    decode_access_token,
 )
 from app.core.config import settings
 from app.core.deps import get_current_user
@@ -20,11 +20,33 @@ from app.schemas.auth import (
     RegisterRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
+    VerifyOtpRequest,
     ChangePasswordRequest,
 )
 from app.schemas.user import UserResponse
+from app.services.settings_service import is_smtp_configured
+from app.services.email_service import EmailError, send_password_reset_otp
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+
+def _utc_now_naive() -> datetime:
+    """Current UTC time as a NAIVE datetime.
+
+    The DB columns are plain DateTime (no tz) and PostgreSQL returns naive
+    values, so all expiry comparisons must be naive-to-naive. Mixing an aware
+    datetime.now(timezone.utc) with a naive column value raises TypeError.
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _as_naive_utc(dt: datetime | None) -> datetime | None:
+    """Normalize any datetime to naive UTC so comparisons never raise."""
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
 
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
@@ -125,50 +147,124 @@ def logout(current_user: User = Depends(get_current_user)):
 
 @router.post("/forgot-password")
 def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    """Request a password reset token."""
-    user = db.query(User).filter(User.email == request.email).first()
-    if not user:
-        # Don't reveal that the email doesn't exist
-        return {"message": "If the email exists, a reset link has been sent"}
+    """Request a password reset OTP sent by email.
 
-    # Generate reset token
-    reset_token = create_access_token(
-        data={"sub": str(user.id), "purpose": "reset"},
-        expires_delta=timedelta(hours=1),
+    Always returns the same generic response whether or not the email
+    exists — never reveal account existence to anonymous callers.
+    """
+    generic_response = {
+        "message": "If this email is registered, a password reset code has been sent"
+    }
+
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user or not user.is_active or user.is_banned:
+        return generic_response
+
+    # SMTP must be configured, otherwise we cannot deliver the code
+    if not is_smtp_configured(db):
+        # The admin hasn't set up email yet — stay silent to the user
+        # (no enumeration leak), log it, and return the generic response.
+        print("[email] forgot-password called but SMTP is not configured")
+        return generic_response
+
+    # Rate-limit resends: refuse a new OTP if one was issued < 60s ago
+    now = _utc_now_naive()
+    if user.reset_otp_expires:
+        issued_at = _as_naive_utc(user.reset_otp_expires) - timedelta(
+            minutes=settings.RESET_OTP_TTL_MINUTES
+        )
+        if (now - issued_at).total_seconds() < 60:
+            return generic_response
+
+    # Generate a 6-digit OTP
+    otp_code = f"{secrets.randbelow(1000000):06d}"
+
+    user.reset_otp = otp_code
+    user.reset_otp_expires = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.RESET_OTP_TTL_MINUTES
     )
-    user.reset_token = reset_token
-    user.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=1)
+    user.reset_otp_attempts = 0
+    # Invalidate any legacy token-based reset flow
+    user.reset_token = None
+    user.reset_token_expires = None
     db.commit()
 
-    # In production, send email with reset link
-    # For now, return the token (in production this would be sent via email)
-    return {
-        "message": "If the email exists, a reset link has been sent",
-        "reset_token": reset_token,  # Remove in production - only for development
-    }
+    # Send the email — failures must not break the flow or leak details
+    try:
+        send_password_reset_otp(db, user.email, user.full_name or user.username, otp_code)
+    except EmailError as e:
+        print(f"[email] Failed to send password reset OTP: {e}")
+        # Clear the OTP so a stale code can't be used
+        user.reset_otp = None
+        user.reset_otp_expires = None
+        db.commit()
+
+    return generic_response
+
+
+def _verify_otp(db: Session, email: str, otp: str):
+    """Shared OTP verification used by verify-otp and reset-password.
+
+    Returns the User on success, raises HTTPException otherwise.
+    """
+    user = db.query(User).filter(User.email == email).first()
+
+    # Same generic error for unknown email and wrong code
+    invalid = HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Invalid or expired reset code",
+    )
+    if not user or not user.reset_otp or not user.reset_otp_expires:
+        raise invalid
+
+    # Expired? (normalize both sides to naive UTC — the DB returns naive)
+    expires = _as_naive_utc(user.reset_otp_expires)
+    if _utc_now_naive() > expires:
+        user.reset_otp = None
+        user.reset_otp_expires = None
+        user.reset_otp_attempts = 0
+        db.commit()
+        raise invalid
+
+    # Too many failed attempts? Invalidate the code.
+    if user.reset_otp_attempts >= settings.RESET_OTP_MAX_ATTEMPTS:
+        user.reset_otp = None
+        user.reset_otp_expires = None
+        user.reset_otp_attempts = 0
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many failed attempts. Please request a new code.",
+        )
+
+    # Constant-time comparison of the 6-digit code
+    if not secrets.compare_digest(user.reset_otp, otp):
+        user.reset_otp_attempts += 1
+        db.commit()
+        raise invalid
+
+    return user
+
+
+@router.post("/verify-otp")
+def verify_otp(request: VerifyOtpRequest, db: Session = Depends(get_db)):
+    """Verify a password reset OTP without resetting the password yet.
+
+    Lets the frontend validate the code before showing the new-password form.
+    """
+    _verify_otp(db, request.email, request.otp)
+    return {"message": "Code verified", "valid": True}
 
 
 @router.post("/reset-password")
 def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
-    """Reset password using a reset token."""
-    payload = decode_access_token(request.token)
-    if not payload or payload.get("purpose") != "reset":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired reset token",
-        )
-
-    user_id = payload.get("sub")
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User not found",
-        )
+    """Reset password using the OTP code received by email."""
+    user = _verify_otp(db, request.email, request.otp)
 
     user.hashed_password = get_password_hash(request.new_password)
-    user.reset_token = None
-    user.reset_token_expires = None
+    user.reset_otp = None
+    user.reset_otp_expires = None
+    user.reset_otp_attempts = 0
     db.commit()
 
     return {"message": "Password has been reset successfully"}

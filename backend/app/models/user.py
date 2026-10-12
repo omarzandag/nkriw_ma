@@ -45,7 +45,10 @@ class User(Base):
     rating = Column(Float, default=0.0)
     verification_badge = Column(Boolean, default=False)
 
-    # Password reset
+    # Password reset (OTP-based)
+    reset_otp = Column(String(10), nullable=True)  # 6-digit code
+    reset_otp_expires = Column(DateTime, nullable=True)
+    reset_otp_attempts = Column(Integer, default=0, nullable=False)  # brute-force guard
     reset_token = Column(String(500), nullable=True)
     reset_token_expires = Column(DateTime, nullable=True)
 

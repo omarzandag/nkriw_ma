@@ -9,6 +9,7 @@ from app.models.messaging import Conversation, Message
 from app.models.comment import Comment, CommentLike
 from app.models.notification import Notification
 from app.models.report import Report
+from app.models.settings import SiteSetting
 
 __all__ = [
     "User",
@@ -28,4 +29,5 @@ __all__ = [
     "CommentLike",
     "Notification",
     "Report",
+    "SiteSetting",
 ]
