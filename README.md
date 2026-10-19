@@ -533,18 +533,49 @@ npm run build
 
 ## 🐳 Docker
 
-A `docker-compose.yml` is provided to run **PostgreSQL only**. The backend and frontend are intended to run locally during development.
+A full `docker-compose.yml` runs **PostgreSQL + the FastAPI backend + the
+React frontend** as three containers — ready to work in any environment with a
+single command. Defaults are in-place, so `docker compose up -d` works out of
+the box; a `.env.example` documents every override for production.
+
+The frontend is built into a production `nginx:alpine` image that serves the
+Vite SPA and reverse-proxies `/api` and `/uploads` to the backend, so the whole
+app is **same-origin on one port** (no CORS headaches in production).
 
 ```bash
-# Start the database
-docker-compose up -d
+# Build & start the whole stack (first run builds the images)
+docker compose up -d --build
 
-# Stop the database
-docker-compose down
+# Follow logs
+docker compose logs -f
 
-# Stop and remove data volume
-docker-compose down -v
+# Stop everything
+docker compose down
+
+# Stop and wipe all persistent data (database + uploads)
+docker compose down -v
 ```
+
+### Services
+| Service | Image | Port | Notes |
+|---|---|---|---|
+| `db` | `postgres:15-alpine` | (internal) | Data in the `postgres_data` named volume |
+| `backend` | `python:3.12-slim` + uvicorn | exposed to the frontend only | Auto-creates schema + default admin on first start |
+| `frontend` | `nginx:1.27-alpine` + built Vite SPA | host `:80` (`FRONTEND_PORT` overrides) | Proxies `/api` & `/uploads` to the backend |
+
+### Default credentials
+- Admin account (auto-created on first start): **`admin@nkriw.ma` / `admin123`**
+- PostgreSQL (in-compose): **`nkriwma` / `nkriwma_password` / `nkriwma`**
+
+> ⚠️ For production, copy `.env.example` → `.env` and override `SECRET_KEY`,
+> `ADMIN_PASSWORD`, the PostgreSQL credentials, and `DATABASE_URL`. If you
+> change `POSTGRES_PASSWORD`, update `DATABASE_URL` to match.
+
+### Images
+| Dockerfile | Builds |
+|---|---|
+| `backend/Dockerfile` | Single-stage FastAPI app (`python:3.12-slim`) |
+| `frontend/Dockerfile` | Multi-stage: Vite build → `nginx:alpine` runtime |
 
 ---
 

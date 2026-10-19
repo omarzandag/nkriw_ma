@@ -1,0 +1,27 @@
+# Build context for the backend image (context: ./backend)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Environment — never bake secrets into the image
+.env
+.env.*
+.env.local
+
+# Runtime / dev artefacts
+.venv/
+venv/
+env/
+uploads/
+*.db
+*.sqlite3
+*.log
+.mypy_cache/
+.pytest_cache/
+.idea/
+.vscode/
